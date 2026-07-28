@@ -105,7 +105,19 @@
   <div class="toolbar">
     <input class="search" id="q" type="text" placeholder="名前・かなで検索...">
     <button class="btn" onclick="downloadCSV()">📊 CSV出力</button>
+    <button class="btn" onclick="toggleAddPanel()">➕ ドタ参追加</button>
     <button class="btn danger" onclick="resetAll()">🔄 リセット</button>
+  </div>
+  <div id="add-panel" hidden style="background:rgba(139,26,26,.08);border:1px solid rgba(139,26,26,.25);border-radius:16px;padding:16px;margin:14px 0;">
+    <div style="font-size:13px;color:#fde68a;font-weight:900;margin-bottom:12px;">ドタ参追加</div>
+    <div style="display:grid;gap:10px;margin-bottom:12px;">
+      <input id="add-name" type="text" placeholder="氏名" style="border:1px solid #334155;background:#0b1220;color:#e5e7eb;border-radius:8px;padding:8px 10px;font-size:13px;outline:none;">
+      <input id="add-kana" type="text" placeholder="かな（例: たろうはなこ）" style="border:1px solid #334155;background:#0b1220;color:#e5e7eb;border-radius:8px;padding:8px 10px;font-size:13px;outline:none;">
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn" style="background:linear-gradient(135deg, #16a34a, #15803d);flex:1;" onclick="addParticipant()">追加して来場打刻</button>
+      <button class="btn" onclick="toggleAddPanel()" style="flex:0;">閉じる</button>
+    </div>
   </div>
   <div class="list" id="list"></div>
 </div>
@@ -307,6 +319,35 @@ function resetAll() {
     localStorage.removeItem(KEY);
     location.reload();
   }
+}
+
+function toggleAddPanel() {
+  const panel = document.getElementById('add-panel');
+  const btn = event.target;
+  if (panel.hidden) {
+    panel.hidden = false;
+    btn.textContent = '➕ 閉じる';
+    document.getElementById('add-name').focus();
+  } else {
+    panel.hidden = true;
+    btn.textContent = '➕ ドタ参追加';
+  }
+}
+
+function addParticipant() {
+  const name = document.getElementById('add-name').value.trim();
+  const kana = document.getElementById('add-kana').value.trim();
+  if (!name) {
+    alert('氏名を入力してください');
+    return;
+  }
+  const nextNo = Math.max(...DATA.map(p => p.no), 0) + 1;
+  DATA.push({no: nextNo, name, kana});
+  setState(nextNo);
+  setArr(nextNo, true);
+  document.getElementById('add-name').value = '';
+  document.getElementById('add-kana').value = '';
+  toggleAddPanel();
 }
 
 buildJumpbar();
