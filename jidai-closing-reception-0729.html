@@ -54,7 +54,7 @@
   .no { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: linear-gradient(135deg, rgba(139,26,26,.3), rgba(139,26,26,.12)); border: 1px solid rgba(139,26,26,.35); font-weight: 900; font-size: 18px; color: #fecaca; }
   .name { font-size: 19px; font-weight: 900; line-height: 1.25; }
   .detail { margin-top: 5px; color: var(--muted); font-size: 12px; }
-  .timestamp { background: linear-gradient(135deg, #0ea5e9, #0284c7); padding: 8px 14px; border-radius: 12px; text-align: center; font-size: 16px; font-weight: 900; color: #fff; min-width: 80px; }
+  .timestamp { background: linear-gradient(135deg, #0ea5e9, #0284c7); padding: 8px 14px; border-radius: 12px; text-align: center; font-size: 14px; font-weight: 900; color: #fff; font-family: 'Courier New', monospace; }
   .actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
   .line { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
   .mini { border: none; border-radius: 12px; padding: 10px 12px; font-size: 13px; font-weight: 800; cursor: pointer; color: #fff; background: #334155; }
@@ -67,7 +67,7 @@
   @media (max-width: 768px) {
     .row { grid-template-columns: 40px 1fr auto; gap: 12px; }
     .no { width: 40px; height: 40px; font-size: 14px; }
-    .timestamp { padding: 6px 10px; font-size: 14px; min-width: 70px; }
+    .timestamp { padding: 6px 10px; font-size: 12px; }
     .actions { display: flex; flex-direction: row; gap: 6px; margin-top: 12px; }
     .line { gap: 4px; }
     .mini { padding: 8px 10px; font-size: 12px; }
@@ -117,7 +117,8 @@ function getJSTTime() {
   const now = new Date(Date.now() + 9*3600*1000);
   const h = pad(now.getUTCHours());
   const m = pad(now.getUTCMinutes());
-  return h + ':' + m;
+  const s = pad(now.getUTCSeconds());
+  return h + ':' + m + ':' + s;
 }
 
 function setArr(no, val) {
