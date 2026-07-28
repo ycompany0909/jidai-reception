@@ -130,19 +130,33 @@
 
 <script>
 const DATA = [
-  {"no": 1, "name": "山田太郎", "kana": "やまだたろう"},
-  {"no": 2, "name": "田中花子", "kana": "たなかはなこ"},
-  {"no": 3, "name": "佐藤一郎", "kana": "さとういちろう"},
-  {"no": 4, "name": "鈴木美咲", "kana": "すずきみさき"},
-  {"no": 5, "name": "伊藤健太", "kana": "いとうけんた"},
-  {"no": 6, "name": "渡辺由美", "kana": "わたなべゆみ"},
-  {"no": 7, "name": "高橋翔太", "kana": "たかはしょうた"},
-  {"no": 8, "name": "小林彩", "kana": "こばやしあや"},
-  {"no": 9, "name": "加藤大樹", "kana": "かとうたいき"},
-  {"no": 10, "name": "青木結衣", "kana": "あおきゆい"}
+  {"no": 1, "name": "遠藤泰司", "kana": "えんどうたいし"},
+  {"no": 2, "name": "亀ヶ谷正信", "kana": "かめがやまさのぶ"},
+  {"no": 3, "name": "久高将泰", "kana": "ひさたかまさやす"},
+  {"no": 4, "name": "黒崎正典", "kana": "くろさきまさのり"},
+  {"no": 5, "name": "浅利昌臣", "kana": "あさりまさおみ"},
+  {"no": 6, "name": "森田克之", "kana": "もりたかつし"},
+  {"no": 7, "name": "柳生好彦", "kana": "やぎゅうよしひこ"},
+  {"no": 8, "name": "脊尾大雅", "kana": "せおひろまさ"},
+  {"no": 9, "name": "本嶋孔太郎", "kana": "もとしまこうたろう"},
+  {"no": 10, "name": "小段悠也", "kana": "こだんゆうや"},
+  {"no": 11, "name": "城戸佐和子", "kana": "きどさわこ"},
+  {"no": 12, "name": "町田信行", "kana": "まちだのぶゆき"},
+  {"no": 13, "name": "何惠君", "kana": "めぐみ"},
+  {"no": 14, "name": "鈴木雄大", "kana": "すずきゆうだい"},
+  {"no": 15, "name": "井上祥邦", "kana": "いのうえよしくに"},
+  {"no": 16, "name": "下島房宙", "kana": "しもじまふさひろ"},
+  {"no": 17, "name": "真田徹", "kana": "さなだとおる"},
+  {"no": 18, "name": "平野孝子", "kana": "ひらのたかこ"},
+  {"no": 19, "name": "吉益一弘", "kana": "よしますかずひろ"},
+  {"no": 20, "name": "森雄大郎", "kana": "もりゆうだいろう"},
+  {"no": 21, "name": "風林佳保利", "kana": "かざばやしよしほり"},
+  {"no": 22, "name": "吉野正悟", "kana": "よしののぶさと"},
+  {"no": 23, "name": "和田修一郎", "kana": "わだしゅういちろう"},
+  {"no": 24, "name": "上籔洋子", "kana": "うえやぶようこ"}
 ];
 
-const KEY = 'suzuki-birthday-v1';
+const KEY = 'suzuki-birthday-v2';
 let state = JSON.parse(localStorage.getItem(KEY) || '{}');
 DATA.forEach(p => {
   if (!state[p.no]) state[p.no] = {arr:null, pay:null, ts:null, noshow:false};
