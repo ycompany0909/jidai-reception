@@ -113,6 +113,12 @@
     <div style="display:grid;gap:10px;margin-bottom:12px;">
       <input id="add-name" type="text" placeholder="氏名" style="border:1px solid #334155;background:#0b1220;color:#e5e7eb;border-radius:8px;padding:8px 10px;font-size:13px;outline:none;">
       <input id="add-kana" type="text" placeholder="かな（例: たろうはなこ）" style="border:1px solid #334155;background:#0b1220;color:#e5e7eb;border-radius:8px;padding:8px 10px;font-size:13px;outline:none;">
+      <select id="add-payment" style="border:1px solid #334155;background:#0b1220;color:#e5e7eb;border-radius:8px;padding:8px 10px;font-size:13px;outline:none;">
+        <option value="">支払方法を選択</option>
+        <option value="c">現金</option>
+        <option value="k">カード</option>
+        <option value="e">免除</option>
+      </select>
     </div>
     <div style="display:flex;gap:10px;">
       <button class="btn" style="background:linear-gradient(135deg, #16a34a, #15803d);flex:1;" onclick="addParticipant()">追加して来場打刻</button>
@@ -337,16 +343,23 @@ function toggleAddPanel() {
 function addParticipant() {
   const name = document.getElementById('add-name').value.trim();
   const kana = document.getElementById('add-kana').value.trim();
+  const payment = document.getElementById('add-payment').value;
   if (!name) {
     alert('氏名を入力してください');
     return;
   }
+  if (!payment) {
+    alert('支払方法を選択してください');
+    return;
+  }
   const nextNo = Math.max(...DATA.map(p => p.no), 0) + 1;
   DATA.push({no: nextNo, name, kana});
-  setState(nextNo);
+  const s = setState(nextNo);
+  s.pay = payment;
   setArr(nextNo, true);
   document.getElementById('add-name').value = '';
   document.getElementById('add-kana').value = '';
+  document.getElementById('add-payment').value = '';
   toggleAddPanel();
 }
 
