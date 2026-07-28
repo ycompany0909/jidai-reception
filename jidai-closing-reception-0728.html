@@ -5,103 +5,104 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>受付 — 7/28</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: sans-serif; background: #0a0e27; color: #e2e8f0; font-size: 14px; }
-  .header { background: #8B1A1A; padding: 16px 12px; text-align: center; sticky: top; }
-  .stats { display: flex; gap: 12px; justify-content: center; font-size: 13px; margin-top: 8px; }
-  .stat { background: rgba(255,255,255,.1); padding: 6px 10px; border-radius: 4px; }
-  .container { max-width: 600px; margin: 0 auto; padding: 8px; }
-  .row { background: #1a1f3a; border: 1px solid #334155; border-radius: 6px; padding: 8px; margin-bottom: 6px; display: flex; gap: 8px; align-items: center; }
-  .row.checked { background: #1a3a1a; }
-  .row.absent { background: #3a1a1a; }
-  .name { flex: 1; min-width: 0; }
-  .name-main { font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
-  .name-sub { font-size: 12px; color: #64748b; }
-  .btns { display: flex; gap: 3px; flex-shrink: 0; }
-  .btn { width: 28px; height: 28px; border: none; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .btn-arr { background: #16a34a; color: white; }
-  .btn-abs { background: #dc2626; color: white; }
-  .btn-cash { background: #2563eb; color: white; }
-  .btn-card { background: #7c3aed; color: white; }
-  .btn-exempt { background: #6b7280; color: white; }
-  .footer { padding: 12px; text-align: center; border-top: 1px solid #334155; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-  .footer button { padding: 8px 16px; border: 1px solid #475569; background: #1e293b; color: #e2e8f0; border-radius: 4px; cursor: pointer; font-size: 13px; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+  color: #212529;
+  font-size: 14px;
+}
+.header {
+  background: linear-gradient(135deg, #8B1A1A, #5a0f0f);
+  padding: 24px 16px 16px;
+  text-align: center;
+  color: #fff;
+}
+.header-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; opacity: 0.85; margin-bottom: 4px; }
+.header-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+.header-date { display: inline-block; background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 500; margin-bottom: 12px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+.stat { background: rgba(255,255,255,0.12); padding: 8px; border-radius: 8px; text-align: center; backdrop-filter: blur(10px); }
+.stat-label { font-size: 11px; opacity: 0.8; margin-bottom: 4px; }
+.stat-value { font-size: 18px; font-weight: 700; }
+.container { max-width: 600px; margin: 0 auto; padding: 12px 8px; }
+.row { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 10px; margin-bottom: 8px; display: grid; grid-template-columns: 48px 1fr auto; gap: 10px; align-items: center; transition: all 0.2s ease; }
+.row:active { transform: scale(0.98); }
+.row.checked { background: #d4edda; border-color: #16a34a; }
+.row.absent { background: #f8d7da; border-color: #dc2626; }
+.badge { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #8B1A1A, #5a0f0f); color: #fff; border-radius: 8px; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.name { min-width: 0; }
+.name-main { font-weight: 500; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 2px; }
+.name-sub { font-size: 12px; color: #6c757d; }
+.btns { display: flex; gap: 4px; flex-shrink: 0; }
+.btn { width: 32px; height: 32px; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; position: relative; }
+.btn:active { transform: scale(0.92); }
+.btn.active { box-shadow: 0 0 0 2px rgba(0,0,0,0.1), inset 0 0 0 2px rgba(255,255,0,0.4); }
+.btn-arr { background: linear-gradient(135deg, #16a34a, #15803d); color: white; }
+.btn-abs { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; }
+.btn-cash { background: linear-gradient(135deg, #059669, #047857); color: white; }
+.btn-card { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; }
+.btn-exempt { background: linear-gradient(135deg, #0891b2, #0e7490); color: white; }
+.footer { padding: 16px 12px; text-align: center; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; background: #fff; border-top: 1px solid #dee2e6; margin-top: 12px; }
+.footer button { padding: 10px 20px; border: 1px solid #dee2e6; background: #fff; color: #212529; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.15s ease; }
+.footer button:active { transform: scale(0.96); }
+.footer button:hover { background: #f8f9fa; }
+@media (max-width: 480px) {
+  .btn { width: 28px; height: 28px; font-size: 9px; }
+  .badge { width: 44px; height: 44px; font-size: 12px; }
+  .header-title { font-size: 22px; }
+  .row { padding: 8px; }
+}
 </style>
 </head>
 <body>
-
 <div class="header">
-  <div><strong>JIDAI クロージング</strong></div>
-  <div style="font-size:12px; margin-top:4px;">7月28日</div>
+  <div class="header-eyebrow">JIDAI CLOSING</div>
+  <div class="header-title">受付</div>
+  <div class="header-date">7月28日</div>
   <div class="stats">
-    <div class="stat">来場 <strong id="stat-arr">0</strong></div>
-    <div class="stat">欠席 <strong id="stat-abs">0</strong></div>
-    <div class="stat">計 <strong id="stat-tot">-</strong></div>
+    <div class="stat"><div class="stat-label">来場</div><div class="stat-value" id="stat-arr">0</div></div>
+    <div class="stat"><div class="stat-label">欠席</div><div class="stat-value" id="stat-abs">0</div></div>
+    <div class="stat"><div class="stat-label">計</div><div class="stat-value" id="stat-tot">-</div></div>
   </div>
 </div>
-
 <div class="container" id="list"></div>
-
 <div class="footer">
   <button onclick="downloadCSV()">CSV</button>
   <button onclick="resetAll()">リセット</button>
 </div>
-
 <script>
 const DATA = [{"no": 1, "name": "内田高史", "kana": "うちだたかし"}, {"no": 2, "name": "田中隆史", "kana": "たなかたかふみ"}, {"no": 3, "name": "塩浦一彗", "kana": "しおうらいっすい"}, {"no": 4, "name": "松澤功", "kana": "まつざわこう"}, {"no": 5, "name": "市川治義", "kana": "いちかわはるよし"}, {"no": 6, "name": "山本晋平", "kana": "やまもとしんぺい"}, {"no": 7, "name": "麻生雅人", "kana": "あそうまさと"}, {"no": 8, "name": "大久保明日奈", "kana": "おおくぼあすな"}, {"no": 9, "name": "若林洋介", "kana": "わかばやしようすけ"}, {"no": 10, "name": "山中奈津子", "kana": "やまなかなつこ"}, {"no": 11, "name": "橘弘毅", "kana": "たちばなひろき"}, {"no": 12, "name": "田村俊敬", "kana": "たむらとしひろ"}, {"no": 13, "name": "宇野カルロス冠章", "kana": "うのかるろすかんしょう"}, {"no": 14, "name": "佐藤凜々果", "kana": "さとうりりか"}, {"no": 15, "name": "佐藤蒼菜", "kana": "さとうそな"}, {"no": 16, "name": "柏谷歩夢", "kana": "かしわやあゆむ"}, {"no": 17, "name": "杉角賢太郎", "kana": "すぎかどけんたろう"}, {"no": 18, "name": "杉角賢太郎", "kana": "すぎかどけんたろう"}, {"no": 19, "name": "山田花子", "kana": "やまだはなこ"}, {"no": 20, "name": "井上寛人", "kana": "いのうえひろと"}, {"no": 21, "name": "村山典久", "kana": "むらやまのりひさ"}, {"no": 22, "name": "鄭宰旭", "kana": "テイアキラ"}, {"no": 23, "name": "相見高志", "kana": "あいみたかし"}, {"no": 24, "name": "宍戸康志", "kana": "ししどこうじ"}, {"no": 25, "name": "大津絵里香", "kana": "おおつえりか"}];
-
 const KEY = 'jidai-07-28';
 let state = JSON.parse(localStorage.getItem(KEY) || '{}');
-
-function setState(no) {
-  if (!state[no]) state[no] = { arr: null, pay: null };
-  return state[no];
-}
-
-function save() {
-  localStorage.setItem(KEY, JSON.stringify(state));
-  render();
-}
-
-function setArr(no, val) {
-  const s = setState(no);
-  s.arr = val;
-  save();
-}
-
-function setPay(no, val) {
-  const s = setState(no);
-  s.pay = val;
-  save();
-}
-
+function setState(no) { if (!state[no]) state[no] = { arr: null, pay: null }; return state[no]; }
+function save() { localStorage.setItem(KEY, JSON.stringify(state)); render(); }
+function setArr(no, val) { const s = setState(no); s.arr = val; save(); }
+function setPay(no, val) { const s = setState(no); s.pay = val; save(); }
 function render() {
   const list = document.getElementById('list');
   const stats = { arr: 0, abs: 0 };
-
   list.innerHTML = DATA.map(p => {
     const s = state[p.no] || {};
     const isArr = s.arr === true;
     const isAbs = s.arr === false;
     if (isArr) stats.arr++;
     if (isAbs) stats.abs++;
-
     return '<div class="row ' + (isArr ? 'checked' : '') + (isAbs ? ' absent' : '') + '">'
+      + '<div class="badge">' + p.no + '</div>'
       + '<div class="name"><div class="name-main">' + p.name + '</div><div class="name-sub">' + p.kana + '</div></div>'
       + '<div class="btns">'
-      + '<button class="btn btn-arr" onclick="setArr(' + p.no + ', true)">✓</button>'
-      + '<button class="btn btn-abs" onclick="setArr(' + p.no + ', false)">✗</button>'
-      + '<button class="btn btn-cash" onclick="setPay(' + p.no + ', \'c\')">現</button>'
-      + '<button class="btn btn-card" onclick="setPay(' + p.no + ', \'k\')">カ</button>'
-      + '<button class="btn btn-exempt" onclick="setPay(' + p.no + ', \'e\')">免</button>'
+      + '<button class="btn btn-arr' + (isArr ? ' active' : '') + '" onclick="setArr(' + p.no + ', true)">✓</button>'
+      + '<button class="btn btn-abs' + (isAbs ? ' active' : '') + '" onclick="setArr(' + p.no + ', false)">✗</button>'
+      + '<button class="btn btn-cash' + (s.pay === 'c' ? ' active' : '') + '" onclick="setPay(' + p.no + ', \'c\')">現</button>'
+      + '<button class="btn btn-card' + (s.pay === 'k' ? ' active' : '') + '" onclick="setPay(' + p.no + ', \'k\')">カ</button>'
+      + '<button class="btn btn-exempt' + (s.pay === 'e' ? ' active' : '') + '" onclick="setPay(' + p.no + ', \'e\')">免</button>'
       + '</div></div>';
   }).join('');
-
   document.getElementById('stat-arr').textContent = stats.arr;
   document.getElementById('stat-abs').textContent = stats.abs;
   document.getElementById('stat-tot').textContent = DATA.length;
 }
-
 function downloadCSV() {
   let csv = '番号,氏名,来場,支払\n';
   DATA.forEach(p => {
@@ -113,19 +114,16 @@ function downloadCSV() {
   const blob = new Blob([csv], { type: 'text/csv; charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = 'JIDAI_07-28.csv';
+  link.download = 'JIDAI_0728.csv';
   link.click();
 }
-
 function resetAll() {
   if (confirm('リセットしますか？')) {
     localStorage.removeItem(KEY);
     location.reload();
   }
 }
-
 render();
 </script>
-
 </body>
 </html>
