@@ -41,7 +41,7 @@
     font-size: 13px;
     color: #fef3c7;
   }
-  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px 13px; }
   .k { font-size: 12px; color: var(--muted); }
   .v { font-size: 26px; font-weight: 900; margin-top: 4px; line-height: 1; }
@@ -50,8 +50,10 @@
   .jumpbtn:active { transform: scale(0.95); }
   .jumpbtn.active { color: #fde68a; border-color: rgba(245, 158, 11, .45); background: rgba(245, 158, 11, .14); }
   .jumpbtn:disabled { opacity: .32; cursor: not-allowed; }
-  .toolbar { display: flex; gap: 10px; margin: 14px 0; }
-  .btn { border: none; border-radius: 14px; padding: 14px 16px; font-size: 14px; font-weight: 800; cursor: pointer; color: #fff; background: linear-gradient(135deg, #2563eb, #1e40af); }
+  .toolbar { display: flex; gap: 10px; margin: 14px 0; align-items: center; }
+  .search { flex: 1; border: 1px solid var(--line); background: #0b1220; color: var(--ink); border-radius: 14px; padding: 12px 14px; font-size: 14px; outline: none; }
+  .search:focus { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14, 165, 233, .16); }
+  .btn { border: none; border-radius: 14px; padding: 14px 16px; font-size: 14px; font-weight: 800; cursor: pointer; color: #fff; background: linear-gradient(135deg, #2563eb, #1e40af); white-space: nowrap; }
   .btn.danger { background: linear-gradient(135deg, #991b1b, #7f1d1d); }
   .list { display: grid; grid-template-columns: 1fr; gap: 10px; }
   .row { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 14px; display: grid; grid-template-columns: 52px 1.2fr auto auto; gap: 14px; align-items: center; }
@@ -68,6 +70,7 @@
   .mini.cash { background: linear-gradient(135deg, #166534, #14532d); }
   .mini.card { background: linear-gradient(135deg, #1d4ed8, #1e40af); }
   .mini.exempt { background: linear-gradient(135deg, #0f766e, #115e59); }
+  .mini.undo { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
   .mini.active { box-shadow: 0 0 0 3px rgba(254, 240, 138, .2); outline: 2px solid rgba(253,224,71,.7); }
   @media (max-width: 768px) {
     .row { grid-template-columns: 40px 1fr auto; gap: 12px; }
@@ -92,6 +95,7 @@
       <div class="card"><div class="k">来場</div><div class="v" id="stat-arr">0</div></div>
       <div class="card"><div class="k">欠席</div><div class="v" id="stat-abs">0</div></div>
       <div class="card"><div class="k">計</div><div class="v" id="stat-tot">-</div></div>
+      <div class="card"><div class="k">当日現金</div><div class="v">¥<span id="stat-cash">0</span></div></div>
     </div>
   </div>
 </div>
@@ -99,6 +103,7 @@
 <div class="wrap">
   <div class="jumpbar" id="jumpbar"></div>
   <div class="toolbar">
+    <input class="search" id="q" type="text" placeholder="名前・かなで検索...">
     <button class="btn" onclick="downloadCSV()">📊 CSV出力</button>
     <button class="btn danger" onclick="resetAll()">🔄 リセット</button>
   </div>
@@ -144,7 +149,7 @@ function buildJumpbar() {
     const group = getKanaGroup(kana);
     if (group) groups.add(group);
   });
-  
+
   const jumpbar = document.getElementById('jumpbar');
   jumpbar.innerHTML = KANA_ORDER.map(k => {
     const btn = document.createElement('button');
@@ -173,7 +178,7 @@ function jumpToKana(group) {
 }
 
 function setState(no) {
-  if (!state[no]) state[no] = {arr:null, pay:null, ts:null};
+  if (!state[no]) state[no] = {arr:null, pay:null, ts:null, noshow:false};
   return state[no];
 }
 
@@ -195,6 +200,21 @@ function setArr(no, val) {
   const s = setState(no);
   s.arr = val;
   if (val === true) s.ts = getJSTTime();
+  if (val === true) s.noshow = false;
+  save();
+}
+
+function clearArr(no) {
+  const s = setState(no);
+  s.arr = null;
+  s.ts = null;
+  save();
+}
+
+function setNoShow(no) {
+  const s = setState(no);
+  s.noshow = true;
+  s.arr = false;
   save();
 }
 
@@ -203,19 +223,64 @@ function setPay(no, val) {
   save();
 }
 
+const PARTICIPANT_FEE = 10000;
+
+function filteredRows() {
+  const q = (document.getElementById('q').value || '').toLowerCase().trim();
+  if (!q) return DATA;
+  return DATA.filter(p => {
+    const text = (p.name + ' ' + p.kana).toLowerCase();
+    return text.includes(q);
+  });
+}
+
+function isProcessed(p) {
+  const s = state[p.no] || {};
+  return s.arr !== null || s.noshow;
+}
+
+function renderRow(p) {
+  const s = state[p.no] || {};
+  const isArr = s.arr === true;
+  const isNoShow = s.noshow;
+  const rowClass = isProcessed(p) ? 'arrived' : '';
+  const timeHtml = (isArr && s.ts) ? ('<div class="timestamp">' + s.ts + '</div>') : '';
+  const undoBtn = isArr ? ('<button class="mini undo" onclick="clearArr(' + p.no + ')">↩</button>') : '';
+  return '<div class="row ' + rowClass + '" data-no="' + p.no + '"><div class="no">' + p.no + '</div><div><div class="name">' + p.name + '</div><div class="detail">' + p.kana + '</div></div>' + timeHtml + '<div class="actions"><div class="line"><button class="mini ' + (isArr ? 'active' : '') + ' arrive" onclick="setArr(' + p.no + ', true)">✓</button><button class="mini ' + (isNoShow ? 'active' : '') + ' absent" onclick="setNoShow(' + p.no + ')">✗</button>' + undoBtn + '</div><div class="line"><button class="mini ' + (s.pay==='c'?'active':'') + ' cash" onclick="setPay(' + p.no + ', \'c\')">¥</button><button class="mini ' + (s.pay==='k'?'active':'') + ' card" onclick="setPay(' + p.no + ', \'k\')">カ</button><button class="mini ' + (s.pay==='e'?'active':'') + ' exempt" onclick="setPay(' + p.no + ', \'e\')">免</button></div></div></div>';
+}
+
 function render() {
   const list = document.getElementById('list');
-  const stats = {arr:0, abs:0};
-  list.innerHTML = DATA.map(p => {
+  const stats = {arr:0, abs:0, cash:0};
+  const filtered = filteredRows();
+  const pending = filtered.filter(p => !isProcessed(p));
+  const processed = filtered.filter(p => isProcessed(p));
+
+  DATA.forEach(p => {
     const s = state[p.no] || {};
-    const isArr = s.arr === true, isAbs = s.arr === false;
-    if (isArr) stats.arr++; if (isAbs) stats.abs++;
-    const timeHtml = (isArr && s.ts) ? ('<div class="timestamp">' + s.ts + '</div>') : '';
-    return '<div class="row ' + (isArr ? 'arrived' : '') + '" data-no="' + p.no + '"><div class="no">' + p.no + '</div><div><div class="name">' + p.name + '</div><div class="detail">' + p.kana + '</div></div>' + timeHtml + '<div class="actions"><div class="line"><button class="mini ' + (isArr ? 'active' : '') + ' arrive" onclick="setArr(' + p.no + ', true)">✓ 来場</button><button class="mini ' + (isAbs ? 'active' : '') + ' absent" onclick="setArr(' + p.no + ', false)">✗ 欠席</button></div><div class="line"><button class="mini ' + (s.pay==='c'?'active':'') + ' cash" onclick="setPay(' + p.no + ', \'c\')">現金</button><button class="mini ' + (s.pay==='k'?'active':'') + ' card" onclick="setPay(' + p.no + ', \'k\')">カ</button><button class="mini ' + (s.pay==='e'?'active':'') + ' exempt" onclick="setPay(' + p.no + ', \'e\')">免除</button></div></div></div>';
-  }).join('');
+    if (s.arr === true) stats.arr++;
+    if (s.noshow || (s.arr === false && !s.noshow)) stats.abs++;
+    if (s.pay === 'c') stats.cash++;
+  });
+
+  let html = '';
+  if (pending.length > 0) {
+    html += pending.map(renderRow).join('');
+  } else if (filtered.length > 0) {
+    html += '<div style="padding:20px;text-align:center;color:#94a3b8">未処理なし</div>';
+  }
+
+  if (processed.length > 0) {
+    html += '<div style="margin-top:20px;padding:12px 0;font-size:13px;color:#fde68a;border-bottom:1px solid rgba(148,163,184,.18)">処理済み (' + processed.length + '名)</div>';
+    html += processed.map(renderRow).join('');
+  }
+
+  list.innerHTML = html || '<div style="padding:20px;text-align:center;color:#94a3b8">該当者がいません</div>';
+  const cashAmount = stats.cash * PARTICIPANT_FEE;
   document.getElementById('stat-arr').textContent = stats.arr;
   document.getElementById('stat-abs').textContent = stats.abs;
   document.getElementById('stat-tot').textContent = DATA.length;
+  document.getElementById('stat-cash').textContent = cashAmount.toLocaleString();
 }
 
 function downloadCSV() {
@@ -243,6 +308,7 @@ function resetAll() {
 
 buildJumpbar();
 render();
+document.getElementById('q').addEventListener('input', render);
 </script>
 
 </body>
