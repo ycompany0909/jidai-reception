@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>受付 — 7/28</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: sans-serif; background: #0a0e27; color: #e2e8f0; font-size: 14px; }
+  .header { background: #8B1A1A; padding: 16px 12px; text-align: center; sticky: top; }
+  .stats { display: flex; gap: 12px; justify-content: center; font-size: 13px; margin-top: 8px; }
+  .stat { background: rgba(255,255,255,.1); padding: 6px 10px; border-radius: 4px; }
+  .container { max-width: 600px; margin: 0 auto; padding: 8px; }
+  .row { background: #1a1f3a; border: 1px solid #334155; border-radius: 6px; padding: 8px; margin-bottom: 6px; display: flex; gap: 8px; align-items: center; }
+  .row.checked { background: #1a3a1a; }
+  .row.absent { background: #3a1a1a; }
+  .name { flex: 1; min-width: 0; }
+  .name-main { font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
+  .name-sub { font-size: 12px; color: #64748b; }
+  .btns { display: flex; gap: 3px; flex-shrink: 0; }
+  .btn { width: 28px; height: 28px; border: none; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .btn-arr { background: #16a34a; color: white; }
+  .btn-abs { background: #dc2626; color: white; }
+  .btn-cash { background: #2563eb; color: white; }
+  .btn-card { background: #7c3aed; color: white; }
+  .btn-exempt { background: #6b7280; color: white; }
+  .footer { padding: 12px; text-align: center; border-top: 1px solid #334155; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .footer button { padding: 8px 16px; border: 1px solid #475569; background: #1e293b; color: #e2e8f0; border-radius: 4px; cursor: pointer; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div><strong>JIDAI クロージング</strong></div>
+  <div style="font-size:12px; margin-top:4px;">7月28日</div>
+  <div class="stats">
+    <div class="stat">来場 <strong id="stat-arr">0</strong></div>
+    <div class="stat">欠席 <strong id="stat-abs">0</strong></div>
+    <div class="stat">計 <strong id="stat-tot">-</strong></div>
+  </div>
+</div>
+
+<div class="container" id="list"></div>
+
+<div class="footer">
+  <button onclick="downloadCSV()">CSV</button>
+  <button onclick="resetAll()">リセット</button>
+</div>
+
+<script>
+const DATA = [{"no": 1, "name": "内田高史", "kana": "うちだたかし"}, {"no": 2, "name": "田中隆史", "kana": "たなかたかふみ"}, {"no": 3, "name": "塩浦一彗", "kana": "しおうらいっすい"}, {"no": 4, "name": "松澤功", "kana": "まつざわこう"}, {"no": 5, "name": "市川治義", "kana": "いちかわはるよし"}, {"no": 6, "name": "山本晋平", "kana": "やまもとしんぺい"}, {"no": 7, "name": "麻生雅人", "kana": "あそうまさと"}, {"no": 8, "name": "大久保明日奈", "kana": "おおくぼあすな"}, {"no": 9, "name": "若林洋介", "kana": "わかばやしようすけ"}, {"no": 10, "name": "山中奈津子", "kana": "やまなかなつこ"}, {"no": 11, "name": "橘弘毅", "kana": "たちばなひろき"}, {"no": 12, "name": "田村俊敬", "kana": "たむらとしひろ"}, {"no": 13, "name": "宇野カルロス冠章", "kana": "うのかるろすかんしょう"}, {"no": 14, "name": "佐藤凜々果", "kana": "さとうりりか"}, {"no": 15, "name": "佐藤蒼菜", "kana": "さとうそな"}, {"no": 16, "name": "柏谷歩夢", "kana": "かしわやあゆむ"}, {"no": 17, "name": "杉角賢太郎", "kana": "すぎかどけんたろう"}, {"no": 18, "name": "杉角賢太郎", "kana": "すぎかどけんたろう"}, {"no": 19, "name": "山田花子", "kana": "やまだはなこ"}, {"no": 20, "name": "井上寛人", "kana": "いのうえひろと"}, {"no": 21, "name": "村山典久", "kana": "むらやまのりひさ"}, {"no": 22, "name": "鄭宰旭", "kana": "テイアキラ"}, {"no": 23, "name": "相見高志", "kana": "あいみたかし"}, {"no": 24, "name": "宍戸康志", "kana": "ししどこうじ"}, {"no": 25, "name": "大津絵里香", "kana": "おおつえりか"}];
+
+const KEY = 'jidai-07-28';
+let state = JSON.parse(localStorage.getItem(KEY) || '{}');
+
+function setState(no) {
+  if (!state[no]) state[no] = { arr: null, pay: null };
+  return state[no];
+}
+
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(state));
+  render();
+}
+
+function setArr(no, val) {
+  const s = setState(no);
+  s.arr = val;
+  save();
+}
+
+function setPay(no, val) {
+  const s = setState(no);
+  s.pay = val;
+  save();
+}
+
+function render() {
+  const list = document.getElementById('list');
+  const stats = { arr: 0, abs: 0 };
+
+  list.innerHTML = DATA.map(p => {
+    const s = state[p.no] || {};
+    const isArr = s.arr === true;
+    const isAbs = s.arr === false;
+    if (isArr) stats.arr++;
+    if (isAbs) stats.abs++;
+
+    return '<div class="row ' + (isArr ? 'checked' : '') + (isAbs ? ' absent' : '') + '">'
+      + '<div class="name"><div class="name-main">' + p.name + '</div><div class="name-sub">' + p.kana + '</div></div>'
+      + '<div class="btns">'
+      + '<button class="btn btn-arr" onclick="setArr(' + p.no + ', true)">✓</button>'
+      + '<button class="btn btn-abs" onclick="setArr(' + p.no + ', false)">✗</button>'
+      + '<button class="btn btn-cash" onclick="setPay(' + p.no + ', \'c\')">現</button>'
+      + '<button class="btn btn-card" onclick="setPay(' + p.no + ', \'k\')">カ</button>'
+      + '<button class="btn btn-exempt" onclick="setPay(' + p.no + ', \'e\')">免</button>'
+      + '</div></div>';
+  }).join('');
+
+  document.getElementById('stat-arr').textContent = stats.arr;
+  document.getElementById('stat-abs').textContent = stats.abs;
+  document.getElementById('stat-tot').textContent = DATA.length;
+}
+
+function downloadCSV() {
+  let csv = '番号,氏名,来場,支払\n';
+  DATA.forEach(p => {
+    const s = state[p.no] || {};
+    const arr = s.arr === true ? '◯' : (s.arr === false ? '✗' : '');
+    const pay = {c: '現金', k: 'カード', e: '免除'}[s.pay] || '';
+    csv += p.no + ',"' + p.name + '","' + arr + '","' + pay + '"\n';
+  });
+  const blob = new Blob([csv], { type: 'text/csv; charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'JIDAI_07-28.csv';
+  link.click();
+}
+
+function resetAll() {
+  if (confirm('リセットしますか？')) {
+    localStorage.removeItem(KEY);
+    location.reload();
+  }
+}
+
+render();
+</script>
+
+</body>
+</html>
