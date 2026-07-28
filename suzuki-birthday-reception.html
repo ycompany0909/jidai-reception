@@ -106,6 +106,7 @@
     <input class="search" id="q" type="text" placeholder="名前・かなで検索...">
     <button class="btn" onclick="downloadCSV()">📊 CSV出力</button>
     <button class="btn" onclick="toggleAddPanel()">➕ ドタ参追加</button>
+    <button class="btn" id="lock-btn" onclick="toggleLock()">🔓 アンロック</button>
     <button class="btn danger" onclick="resetAll()">🔄 リセット</button>
   </div>
   <div id="add-panel" hidden style="background:rgba(139,26,26,.08);border:1px solid rgba(139,26,26,.25);border-radius:16px;padding:16px;margin:14px 0;">
@@ -129,7 +130,7 @@
 </div>
 
 <script>
-const DATA = [
+const INITIAL_DATA = [
   {"no": 1, "name": "遠藤泰司", "kana": "えんどうたいし"},
   {"no": 2, "name": "亀ヶ谷正信", "kana": "かめがやまさのぶ"},
   {"no": 3, "name": "久高将泰", "kana": "ひさたかまさやす"},
@@ -156,8 +157,12 @@ const DATA = [
   {"no": 24, "name": "上籔洋子", "kana": "うえやぶようこ"}
 ];
 
-const KEY = 'suzuki-birthday-v2';
-let state = JSON.parse(localStorage.getItem(KEY) || '{}');
+const DATA_KEY = 'suzuki-birthday-v3-data';
+const STATE_KEY = 'suzuki-birthday-v3-state';
+const LOCK_KEY = 'suzuki-birthday-v3-lock';
+let DATA = JSON.parse(localStorage.getItem(DATA_KEY)) || INITIAL_DATA;
+let state = JSON.parse(localStorage.getItem(STATE_KEY) || '{}');
+let isLocked = JSON.parse(localStorage.getItem(LOCK_KEY) || 'false');
 DATA.forEach(p => {
   if (!state[p.no]) state[p.no] = {arr:null, pay:null, ts:null, noshow:false};
 });
@@ -231,7 +236,8 @@ function setState(no) {
 }
 
 function save() {
-  localStorage.setItem(KEY, JSON.stringify(state));
+  localStorage.setItem(DATA_KEY, JSON.stringify(DATA));
+  localStorage.setItem(STATE_KEY, JSON.stringify(state));
   render();
 }
 
@@ -293,8 +299,9 @@ function renderRow(p) {
   const isNoShow = s.noshow;
   const rowClass = isProcessed(p) ? 'arrived' : '';
   const timeHtml = (isArr && s.ts) ? ('<div class="timestamp">' + s.ts + '</div>') : '';
-  const undoBtn = isArr ? ('<button class="mini undo" onclick="clearArr(' + p.no + ')">↩</button>') : '';
-  return '<div class="row ' + rowClass + '" data-no="' + p.no + '"><div class="no">' + p.no + '</div><div><div class="name">' + p.name + '</div><div class="detail">' + p.kana + '</div></div>' + timeHtml + '<div class="actions"><div class="line"><button class="mini ' + (isArr ? 'active' : '') + ' arrive" onclick="setArr(' + p.no + ', true)">✓</button><button class="mini ' + (isNoShow ? 'active' : '') + ' absent" onclick="setNoShow(' + p.no + ')">✗</button>' + undoBtn + '</div><div class="line"><button class="mini ' + (s.pay==='c'?'active':'') + ' cash" onclick="setPay(' + p.no + ', \'c\')">¥</button><button class="mini ' + (s.pay==='k'?'active':'') + ' card" onclick="setPay(' + p.no + ', \'k\')">カ</button><button class="mini ' + (s.pay==='e'?'active':'') + ' exempt" onclick="setPay(' + p.no + ', \'e\')">免</button></div></div></div>';
+  const disabledAttr = isLocked ? ' disabled' : '';
+  const undoBtn = isArr ? ('<button class="mini undo"' + disabledAttr + ' onclick="clearArr(' + p.no + ')">↩</button>') : '';
+  return '<div class="row ' + rowClass + '" data-no="' + p.no + '"><div class="no">' + p.no + '</div><div><div class="name">' + p.name + '</div><div class="detail">' + p.kana + '</div></div>' + timeHtml + '<div class="actions"><div class="line"><button class="mini ' + (isArr ? 'active' : '') + ' arrive"' + disabledAttr + ' onclick="setArr(' + p.no + ', true)">✓</button><button class="mini ' + (isNoShow ? 'active' : '') + ' absent"' + disabledAttr + ' onclick="setNoShow(' + p.no + ')">✗</button>' + undoBtn + '</div><div class="line"><button class="mini ' + (s.pay==='c'?'active':'') + ' cash"' + disabledAttr + ' onclick="setPay(' + p.no + ', \'c\')">¥</button><button class="mini ' + (s.pay==='k'?'active':'') + ' card"' + disabledAttr + ' onclick="setPay(' + p.no + ', \'k\')">カ</button><button class="mini ' + (s.pay==='e'?'active':'') + ' exempt"' + disabledAttr + ' onclick="setPay(' + p.no + ', \'e\')">免</button></div></div></div>';
 }
 
 function render() {
@@ -347,9 +354,29 @@ function downloadCSV() {
   link.click();
 }
 
+function toggleLock() {
+  isLocked = !isLocked;
+  localStorage.setItem(LOCK_KEY, JSON.stringify(isLocked));
+  updateLockButton();
+  render();
+}
+
+function updateLockButton() {
+  const btn = document.getElementById('lock-btn');
+  if (isLocked) {
+    btn.textContent = '🔒 ロック中';
+    btn.style.opacity = '0.6';
+  } else {
+    btn.textContent = '🔓 アンロック';
+    btn.style.opacity = '1';
+  }
+}
+
 function resetAll() {
   if (confirm('リセットしますか？')) {
-    localStorage.removeItem(KEY);
+    localStorage.removeItem(DATA_KEY);
+    localStorage.removeItem(STATE_KEY);
+    localStorage.removeItem(LOCK_KEY);
     location.reload();
   }
 }
@@ -392,6 +419,7 @@ function addParticipant() {
 }
 
 buildJumpbar();
+updateLockButton();
 render();
 document.getElementById('q').addEventListener('input', render);
 </script>
