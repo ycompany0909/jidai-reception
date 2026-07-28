@@ -178,7 +178,8 @@ const KANA_RANGES = {
 
 function getFirstKana(name) {
   if (!name || name.length === 0) return null;
-  return name.charAt(0);
+  const first = name.charAt(0);
+  return first;
 }
 
 function getKanaGroup(kana) {
@@ -218,6 +219,8 @@ function jumpToKana(group) {
     const elem = document.querySelector(`[data-no="${target.no}"]`);
     if (elem) {
       elem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      elem.style.animation = 'none';
+      setTimeout(() => { elem.style.animation = ''; }, 100);
     }
   }
 }
