@@ -204,6 +204,8 @@ function setPay(no, val) {
   save();
 }
 
+const PARTICIPANT_FEE = 10000;
+
 function render() {
   const list = document.getElementById('list');
   const stats = {arr:0, abs:0, cash:0};
@@ -215,10 +217,11 @@ function render() {
     const timeHtml = (isArr && s.ts) ? ('<div class="timestamp">' + s.ts + '</div>') : '';
     return '<div class="row ' + (isArr ? 'arrived' : '') + '" data-no="' + p.no + '"><div class="no">' + p.no + '</div><div><div class="name">' + p.name + '</div><div class="detail">' + p.kana + '</div></div>' + timeHtml + '<div class="actions"><div class="line"><button class="mini ' + (isArr ? 'active' : '') + ' arrive" onclick="setArr(' + p.no + ', true)">✓ 来場</button><button class="mini ' + (isAbs ? 'active' : '') + ' absent" onclick="setArr(' + p.no + ', false)">✗ 欠席</button></div><div class="line"><button class="mini ' + (s.pay==='c'?'active':'') + ' cash" onclick="setPay(' + p.no + ', \'c\')">現金</button><button class="mini ' + (s.pay==='k'?'active':'') + ' card" onclick="setPay(' + p.no + ', \'k\')">カ</button><button class="mini ' + (s.pay==='e'?'active':'') + ' exempt" onclick="setPay(' + p.no + ', \'e\')">免除</button></div></div></div>';
   }).join('');
+  const cashAmount = stats.cash * PARTICIPANT_FEE;
   document.getElementById('stat-arr').textContent = stats.arr;
   document.getElementById('stat-abs').textContent = stats.abs;
   document.getElementById('stat-tot').textContent = DATA.length;
-  document.getElementById('stat-cash').textContent = stats.cash;
+  document.getElementById('stat-cash').textContent = cashAmount.toLocaleString();
 }
 
 function downloadCSV() {
