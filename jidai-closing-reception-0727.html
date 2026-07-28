@@ -54,6 +54,7 @@
   .no { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: linear-gradient(135deg, rgba(139,26,26,.3), rgba(139,26,26,.12)); border: 1px solid rgba(139,26,26,.35); font-weight: 900; font-size: 18px; color: #fecaca; }
   .name { font-size: 19px; font-weight: 900; line-height: 1.25; }
   .detail { margin-top: 5px; color: var(--muted); font-size: 12px; }
+  .time { margin-top: 3px; color: #0ea5e9; font-size: 11px; font-weight: 600; }
   .actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
   .line { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
   .mini { border: none; border-radius: 12px; padding: 10px 12px; font-size: 13px; font-weight: 800; cursor: pointer; color: #fff; background: #334155; }
@@ -99,10 +100,38 @@
 const DATA = [{"no": 1, "name": "栗原秀和", "kana": "くりはらひでかず"}, {"no": 2, "name": "堀琢磨", "kana": "ほりたくま"}, {"no": 3, "name": "後藤拡行", "kana": "ごとうひろゆき"}, {"no": 4, "name": "大松隆文", "kana": "おおまつたかふみ"}, {"no": 5, "name": "塩谷理絵", "kana": "しおやりえ"}, {"no": 6, "name": "佐藤文香", "kana": "さとうあやか"}, {"no": 7, "name": "角崎悦子", "kana": "つのざきえつこ"}, {"no": 8, "name": "パネンハルトムート", "kana": "ぱねんはるとむーと"}, {"no": 9, "name": "樋口一磨", "kana": "ひぐちかずま"}, {"no": 10, "name": "松本かずえ", "kana": "まつもとかずえ"}, {"no": 11, "name": "TavernierBaptiste", "kana": "タヴェルニエバティスト"}, {"no": 12, "name": "井上祥邦", "kana": "いのうえよしくに"}, {"no": 13, "name": "三上尚子", "kana": "みかみなおこ"}];
 const KEY = 'jidai-07-27';
 let state = JSON.parse(localStorage.getItem(KEY) || '{}');
-function setState(no) { if (!state[no]) state[no] = {arr:null,pay:null}; return state[no]; }
-function save() { localStorage.setItem(KEY, JSON.stringify(state)); render(); }
-function setArr(no, val) { setState(no).arr = val; save(); }
-function setPay(no, val) { setState(no).pay = val; save(); }
+
+function setState(no) {
+  if (!state[no]) state[no] = {arr:null, pay:null, ts:null};
+  return state[no];
+}
+
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(state));
+  render();
+}
+
+function pad(n) { return n<10?'0'+n:n; }
+function getJSTTime() {
+  const now = new Date(Date.now() + 9*3600*1000);
+  const h = pad(now.getUTCHours());
+  const m = pad(now.getUTCMinutes());
+  const s = pad(now.getUTCSeconds());
+  return h + ':' + m + ':' + s;
+}
+
+function setArr(no, val) {
+  const s = setState(no);
+  s.arr = val;
+  if (val === true) s.ts = getJSTTime();
+  save();
+}
+
+function setPay(no, val) {
+  setState(no).pay = val;
+  save();
+}
+
 function render() {
   const list = document.getElementById('list');
   const stats = {arr:0, abs:0};
@@ -110,19 +139,22 @@ function render() {
     const s = state[p.no] || {};
     const isArr = s.arr === true, isAbs = s.arr === false;
     if (isArr) stats.arr++; if (isAbs) stats.abs++;
-    return '<div class="row ' + (isArr ? 'arrived' : '') + '"><div class="no">' + p.no + '</div><div><div class="name">' + p.name + '</div><div class="detail">' + p.kana + '</div></div><div class="actions"><div class="line"><button class="mini ' + (isArr ? 'active' : '') + ' arrive" onclick="setArr(' + p.no + ', true)">✓ 来場</button><button class="mini ' + (isAbs ? 'active' : '') + ' absent" onclick="setArr(' + p.no + ', false)">✗ 欠席</button></div><div class="line"><button class="mini ' + (s.pay==='c'?'active':'') + ' cash" onclick="setPay(' + p.no + ', \'c\')">現金</button><button class="mini ' + (s.pay==='k'?'active':'') + ' card" onclick="setPay(' + p.no + ', \'k\')">カ</button><button class="mini ' + (s.pay==='e'?'active':'') + ' exempt" onclick="setPay(' + p.no + ', \'e\')">免除</button></div></div></div>';
+    const timeHtml = (isArr && s.ts) ? ('<div class="time">🕐 ' + s.ts + '</div>') : '';
+    return '<div class="row ' + (isArr ? 'arrived' : '') + '"><div class="no">' + p.no + '</div><div><div class="name">' + p.name + '</div><div class="detail">' + p.kana + '</div>' + timeHtml + '</div><div class="actions"><div class="line"><button class="mini ' + (isArr ? 'active' : '') + ' arrive" onclick="setArr(' + p.no + ', true)">✓ 来場</button><button class="mini ' + (isAbs ? 'active' : '') + ' absent" onclick="setArr(' + p.no + ', false)">✗ 欠席</button></div><div class="line"><button class="mini ' + (s.pay==='c'?'active':'') + ' cash" onclick="setPay(' + p.no + ', \'c\')">現金</button><button class="mini ' + (s.pay==='k'?'active':'') + ' card" onclick="setPay(' + p.no + ', \'k\')">カ</button><button class="mini ' + (s.pay==='e'?'active':'') + ' exempt" onclick="setPay(' + p.no + ', \'e\')">免除</button></div></div></div>';
   }).join('');
   document.getElementById('stat-arr').textContent = stats.arr;
   document.getElementById('stat-abs').textContent = stats.abs;
   document.getElementById('stat-tot').textContent = DATA.length;
 }
+
 function downloadCSV() {
-  let csv = '番号,氏名,来場,支払\n';
+  let csv = '番号,氏名,来場,時刻,支払\n';
   DATA.forEach(p => {
     const s = state[p.no] || {};
     const arr = s.arr===true?'◯':(s.arr===false?'✗':'');
+    const ts = s.ts || '';
     const pay = {c:'現金',k:'カード',e:'免除'}[s.pay]||'';
-    csv += p.no + ',"' + p.name + '","' + arr + '","' + pay + '"\n';
+    csv += p.no + ',"' + p.name + '","' + arr + '","' + ts + '","' + pay + '"\n';
   });
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   const link = document.createElement('a');
@@ -130,13 +162,16 @@ function downloadCSV() {
   link.download = 'JIDAI_07-27.csv';
   link.click();
 }
+
 function resetAll() {
   if (confirm('リセットしますか？')) {
     localStorage.removeItem(KEY);
     location.reload();
   }
 }
+
 render();
 </script>
+
 </body>
 </html>
