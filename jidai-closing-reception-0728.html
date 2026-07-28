@@ -45,6 +45,11 @@
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px 13px; }
   .k { font-size: 12px; color: var(--muted); }
   .v { font-size: 26px; font-weight: 900; margin-top: 4px; line-height: 1; }
+  .jumpbar { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 12px; padding: 10px; border: 1px solid rgba(148, 163, 184, .18); border-radius: 14px; background: rgba(15, 23, 42, .62); }
+  .jumpbtn { border: 1px solid rgba(148, 163, 184, .28); background: #0b1220; color: #cbd5e1; border-radius: 999px; padding: 8px 11px; font-size: 13px; font-weight: 800; cursor: pointer; transition: all 0.15s ease; }
+  .jumpbtn:active { transform: scale(0.95); }
+  .jumpbtn.active { color: #fde68a; border-color: rgba(245, 158, 11, .45); background: rgba(245, 158, 11, .14); }
+  .jumpbtn:disabled { opacity: .32; cursor: not-allowed; }
   .toolbar { display: flex; gap: 10px; margin: 14px 0; }
   .btn { border: none; border-radius: 14px; padding: 14px 16px; font-size: 14px; font-weight: 800; cursor: pointer; color: #fff; background: linear-gradient(135deg, #2563eb, #1e40af); }
   .btn.danger { background: linear-gradient(135deg, #991b1b, #7f1d1d); }
@@ -71,6 +76,8 @@
     .actions { display: flex; flex-direction: row; gap: 6px; margin-top: 12px; }
     .line { gap: 4px; }
     .mini { padding: 8px 10px; font-size: 12px; }
+    .jumpbar { gap: 4px; padding: 8px; }
+    .jumpbtn { padding: 6px 9px; font-size: 12px; }
   }
 </style>
 </head>
@@ -90,6 +97,7 @@
 </div>
 
 <div class="wrap">
+  <div class="jumpbar" id="jumpbar"></div>
   <div class="toolbar">
     <button class="btn" onclick="downloadCSV()">📊 CSV出力</button>
     <button class="btn danger" onclick="resetAll()">🔄 リセット</button>
@@ -101,6 +109,68 @@
 const DATA = [{"no": 1, "name": "内田高史", "kana": "うちだたかし"}, {"no": 2, "name": "田中隆史", "kana": "たなかたかふみ"}, {"no": 3, "name": "塩浦一彗", "kana": "しおうらいっすい"}, {"no": 4, "name": "松澤功", "kana": "まつざわこう"}, {"no": 5, "name": "市川治義", "kana": "いちかわはるよし"}, {"no": 6, "name": "山本晋平", "kana": "やまもとしんぺい"}, {"no": 7, "name": "麻生雅人", "kana": "あそうまさと"}, {"no": 8, "name": "大久保明日奈", "kana": "おおくぼあすな"}, {"no": 9, "name": "若林洋介", "kana": "わかばやしようすけ"}, {"no": 10, "name": "山中奈津子", "kana": "やまなかなつこ"}, {"no": 11, "name": "橘弘毅", "kana": "たちばなひろき"}, {"no": 12, "name": "田村俊敬", "kana": "たむらとしひろ"}, {"no": 13, "name": "宇野カルロス冠章", "kana": "うのかるろすかんしょう"}, {"no": 14, "name": "佐藤凜々果", "kana": "さとうりりか"}, {"no": 15, "name": "佐藤蒼菜", "kana": "さとうそな"}, {"no": 16, "name": "柏谷歩夢", "kana": "かしわやあゆむ"}, {"no": 17, "name": "杉角賢太郎", "kana": "すぎかどけんたろう"}, {"no": 18, "name": "杉角賢太郎", "kana": "すぎかどけんたろう"}, {"no": 19, "name": "山田花子", "kana": "やまだはなこ"}, {"no": 20, "name": "井上寛人", "kana": "いのうえひろと"}, {"no": 21, "name": "村山典久", "kana": "むらやまのりひさ"}, {"no": 22, "name": "鄭宰旭", "kana": "テイアキラ"}, {"no": 23, "name": "相見高志", "kana": "あいみたかし"}, {"no": 24, "name": "宍戸康志", "kana": "ししどこうじ"}, {"no": 25, "name": "大津絵里香", "kana": "おおつえりか"}];
 const KEY = 'jidai-07-28';
 let state = JSON.parse(localStorage.getItem(KEY) || '{}');
+
+const KANA_ORDER = ['あ','か','さ','た','な','は','ま','や','ら','わ'];
+const KANA_RANGES = {
+  'あ': ['あ','い','う','え','お'],
+  'か': ['か','き','く','け','こ','が','ぎ','ぐ','げ','ご'],
+  'さ': ['さ','し','す','せ','そ','ざ','じ','ず','ぜ','ぞ'],
+  'た': ['た','ち','つ','て','と','だ','ぢ','づ','で','ど'],
+  'な': ['な','に','ぬ','ね','の'],
+  'は': ['は','ひ','ふ','へ','ほ','ば','び','ぶ','べ','ぼ','ぱ','ぴ','ぷ','ぺ','ぽ'],
+  'ま': ['ま','み','む','め','も'],
+  'や': ['や','ゆ','よ'],
+  'ら': ['ら','り','る','れ','ろ'],
+  'わ': ['わ','を','ん']
+};
+
+function getFirstKana(name) {
+  if (!name || name.length === 0) return null;
+  const first = name.charAt(0);
+  return first;
+}
+
+function getKanaGroup(kana) {
+  for (let group of KANA_ORDER) {
+    if (KANA_RANGES[group].includes(kana)) return group;
+  }
+  return null;
+}
+
+function buildJumpbar() {
+  const groups = new Set();
+  DATA.forEach(p => {
+    const kana = getFirstKana(p.kana);
+    const group = getKanaGroup(kana);
+    if (group) groups.add(group);
+  });
+  
+  const jumpbar = document.getElementById('jumpbar');
+  jumpbar.innerHTML = KANA_ORDER.map(k => {
+    const btn = document.createElement('button');
+    btn.className = 'jumpbtn';
+    btn.textContent = k;
+    btn.onclick = () => jumpToKana(k);
+    if (!groups.has(k)) btn.disabled = true;
+    return btn.outerHTML;
+  }).join('');
+}
+
+function jumpToKana(group) {
+  const range = KANA_RANGES[group];
+  const target = DATA.find(p => {
+    const kana = getFirstKana(p.kana);
+    return range.includes(kana);
+  });
+  if (target) {
+    const elem = document.querySelector(`[data-no="${target.no}"]`);
+    if (elem) {
+      elem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      elem.style.animation = 'none';
+      setTimeout(() => { elem.style.animation = ''; }, 100);
+    }
+  }
+}
 
 function setState(no) {
   if (!state[no]) state[no] = {arr:null, pay:null, ts:null};
@@ -141,7 +211,7 @@ function render() {
     const isArr = s.arr === true, isAbs = s.arr === false;
     if (isArr) stats.arr++; if (isAbs) stats.abs++;
     const timeHtml = (isArr && s.ts) ? ('<div class="timestamp">' + s.ts + '</div>') : '';
-    return '<div class="row ' + (isArr ? 'arrived' : '') + '"><div class="no">' + p.no + '</div><div><div class="name">' + p.name + '</div><div class="detail">' + p.kana + '</div></div>' + timeHtml + '<div class="actions"><div class="line"><button class="mini ' + (isArr ? 'active' : '') + ' arrive" onclick="setArr(' + p.no + ', true)">✓ 来場</button><button class="mini ' + (isAbs ? 'active' : '') + ' absent" onclick="setArr(' + p.no + ', false)">✗ 欠席</button></div><div class="line"><button class="mini ' + (s.pay==='c'?'active':'') + ' cash" onclick="setPay(' + p.no + ', \'c\')">現金</button><button class="mini ' + (s.pay==='k'?'active':'') + ' card" onclick="setPay(' + p.no + ', \'k\')">カ</button><button class="mini ' + (s.pay==='e'?'active':'') + ' exempt" onclick="setPay(' + p.no + ', \'e\')">免除</button></div></div></div>';
+    return '<div class="row ' + (isArr ? 'arrived' : '') + '" data-no="' + p.no + '"><div class="no">' + p.no + '</div><div><div class="name">' + p.name + '</div><div class="detail">' + p.kana + '</div></div>' + timeHtml + '<div class="actions"><div class="line"><button class="mini ' + (isArr ? 'active' : '') + ' arrive" onclick="setArr(' + p.no + ', true)">✓ 来場</button><button class="mini ' + (isAbs ? 'active' : '') + ' absent" onclick="setArr(' + p.no + ', false)">✗ 欠席</button></div><div class="line"><button class="mini ' + (s.pay==='c'?'active':'') + ' cash" onclick="setPay(' + p.no + ', \'c\')">現金</button><button class="mini ' + (s.pay==='k'?'active':'') + ' card" onclick="setPay(' + p.no + ', \'k\')">カ</button><button class="mini ' + (s.pay==='e'?'active':'') + ' exempt" onclick="setPay(' + p.no + ', \'e\')">免除</button></div></div></div>';
   }).join('');
   document.getElementById('stat-arr').textContent = stats.arr;
   document.getElementById('stat-abs').textContent = stats.abs;
@@ -171,6 +241,7 @@ function resetAll() {
   }
 }
 
+buildJumpbar();
 render();
 </script>
 

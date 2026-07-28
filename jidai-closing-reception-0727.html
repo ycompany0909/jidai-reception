@@ -41,10 +41,15 @@
     font-size: 13px;
     color: #fef3c7;
   }
-  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px 13px; }
   .k { font-size: 12px; color: var(--muted); }
   .v { font-size: 26px; font-weight: 900; margin-top: 4px; line-height: 1; }
+  .jumpbar { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 12px; padding: 10px; border: 1px solid rgba(148, 163, 184, .18); border-radius: 14px; background: rgba(15, 23, 42, .62); }
+  .jumpbtn { border: 1px solid rgba(148, 163, 184, .28); background: #0b1220; color: #cbd5e1; border-radius: 999px; padding: 8px 11px; font-size: 13px; font-weight: 800; cursor: pointer; transition: all 0.15s ease; }
+  .jumpbtn:active { transform: scale(0.95); }
+  .jumpbtn.active { color: #fde68a; border-color: rgba(245, 158, 11, .45); background: rgba(245, 158, 11, .14); }
+  .jumpbtn:disabled { opacity: .32; cursor: not-allowed; }
   .toolbar { display: flex; gap: 10px; margin: 14px 0; }
   .btn { border: none; border-radius: 14px; padding: 14px 16px; font-size: 14px; font-weight: 800; cursor: pointer; color: #fff; background: linear-gradient(135deg, #2563eb, #1e40af); }
   .btn.danger { background: linear-gradient(135deg, #991b1b, #7f1d1d); }
@@ -71,6 +76,8 @@
     .actions { display: flex; flex-direction: row; gap: 6px; margin-top: 12px; }
     .line { gap: 4px; }
     .mini { padding: 8px 10px; font-size: 12px; }
+    .jumpbar { gap: 4px; padding: 8px; }
+    .jumpbtn { padding: 6px 9px; font-size: 12px; }
   }
 </style>
 </head>
@@ -85,11 +92,13 @@
       <div class="card"><div class="k">来場</div><div class="v" id="stat-arr">0</div></div>
       <div class="card"><div class="k">欠席</div><div class="v" id="stat-abs">0</div></div>
       <div class="card"><div class="k">計</div><div class="v" id="stat-tot">-</div></div>
+      <div class="card"><div class="k">当日現金</div><div class="v">¥<span id="stat-cash">0</span></div></div>
     </div>
   </div>
 </div>
 
 <div class="wrap">
+  <div class="jumpbar" id="jumpbar"></div>
   <div class="toolbar">
     <button class="btn" onclick="downloadCSV()">📊 CSV出力</button>
     <button class="btn danger" onclick="resetAll()">🔄 リセット</button>
@@ -101,6 +110,68 @@
 const DATA = [{"no": 1, "name": "栗原秀和", "kana": "くりはらひでかず"}, {"no": 2, "name": "堀琢磨", "kana": "ほりたくま"}, {"no": 3, "name": "後藤拡行", "kana": "ごとうひろゆき"}, {"no": 4, "name": "大松隆文", "kana": "おおまつたかふみ"}, {"no": 5, "name": "塩谷理絵", "kana": "しおやりえ"}, {"no": 6, "name": "佐藤文香", "kana": "さとうあやか"}, {"no": 7, "name": "角崎悦子", "kana": "つのざきえつこ"}, {"no": 8, "name": "パネンハルトムート", "kana": "ぱねんはるとむーと"}, {"no": 9, "name": "樋口一磨", "kana": "ひぐちかずま"}, {"no": 10, "name": "松本かずえ", "kana": "まつもとかずえ"}, {"no": 11, "name": "TavernierBaptiste", "kana": "タヴェルニエバティスト"}, {"no": 12, "name": "井上祥邦", "kana": "いのうえよしくに"}, {"no": 13, "name": "三上尚子", "kana": "みかみなおこ"}];
 const KEY = 'jidai-07-27';
 let state = JSON.parse(localStorage.getItem(KEY) || '{}');
+
+const KANA_ORDER = ['あ','か','さ','た','な','は','ま','や','ら','わ'];
+const KANA_RANGES = {
+  'あ': ['あ','い','う','え','お'],
+  'か': ['か','き','く','け','こ','が','ぎ','ぐ','げ','ご'],
+  'さ': ['さ','し','す','せ','そ','ざ','じ','ず','ぜ','ぞ'],
+  'た': ['た','ち','つ','て','と','だ','ぢ','づ','で','ど'],
+  'な': ['な','に','ぬ','ね','の'],
+  'は': ['は','ひ','ふ','へ','ほ','ば','び','ぶ','べ','ぼ','ぱ','ぴ','ぷ','ぺ','ぽ'],
+  'ま': ['ま','み','む','め','も'],
+  'や': ['や','ゆ','よ'],
+  'ら': ['ら','り','る','れ','ろ'],
+  'わ': ['わ','を','ん']
+};
+
+function getFirstKana(name) {
+  if (!name || name.length === 0) return null;
+  const first = name.charAt(0);
+  return first;
+}
+
+function getKanaGroup(kana) {
+  for (let group of KANA_ORDER) {
+    if (KANA_RANGES[group].includes(kana)) return group;
+  }
+  return null;
+}
+
+function buildJumpbar() {
+  const groups = new Set();
+  DATA.forEach(p => {
+    const kana = getFirstKana(p.kana);
+    const group = getKanaGroup(kana);
+    if (group) groups.add(group);
+  });
+  
+  const jumpbar = document.getElementById('jumpbar');
+  jumpbar.innerHTML = KANA_ORDER.map(k => {
+    const btn = document.createElement('button');
+    btn.className = 'jumpbtn';
+    btn.textContent = k;
+    btn.onclick = () => jumpToKana(k);
+    if (!groups.has(k)) btn.disabled = true;
+    return btn.outerHTML;
+  }).join('');
+}
+
+function jumpToKana(group) {
+  const range = KANA_RANGES[group];
+  const target = DATA.find(p => {
+    const kana = getFirstKana(p.kana);
+    return range.includes(kana);
+  });
+  if (target) {
+    const elem = document.querySelector(`[data-no="${target.no}"]`);
+    if (elem) {
+      elem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      elem.style.animation = 'none';
+      setTimeout(() => { elem.style.animation = ''; }, 100);
+    }
+  }
+}
 
 function setState(no) {
   if (!state[no]) state[no] = {arr:null, pay:null, ts:null};
@@ -135,17 +206,19 @@ function setPay(no, val) {
 
 function render() {
   const list = document.getElementById('list');
-  const stats = {arr:0, abs:0};
+  const stats = {arr:0, abs:0, cash:0};
   list.innerHTML = DATA.map(p => {
     const s = state[p.no] || {};
     const isArr = s.arr === true, isAbs = s.arr === false;
     if (isArr) stats.arr++; if (isAbs) stats.abs++;
+    if (s.pay === 'c') stats.cash++;
     const timeHtml = (isArr && s.ts) ? ('<div class="timestamp">' + s.ts + '</div>') : '';
-    return '<div class="row ' + (isArr ? 'arrived' : '') + '"><div class="no">' + p.no + '</div><div><div class="name">' + p.name + '</div><div class="detail">' + p.kana + '</div></div>' + timeHtml + '<div class="actions"><div class="line"><button class="mini ' + (isArr ? 'active' : '') + ' arrive" onclick="setArr(' + p.no + ', true)">✓ 来場</button><button class="mini ' + (isAbs ? 'active' : '') + ' absent" onclick="setArr(' + p.no + ', false)">✗ 欠席</button></div><div class="line"><button class="mini ' + (s.pay==='c'?'active':'') + ' cash" onclick="setPay(' + p.no + ', \'c\')">現金</button><button class="mini ' + (s.pay==='k'?'active':'') + ' card" onclick="setPay(' + p.no + ', \'k\')">カ</button><button class="mini ' + (s.pay==='e'?'active':'') + ' exempt" onclick="setPay(' + p.no + ', \'e\')">免除</button></div></div></div>';
+    return '<div class="row ' + (isArr ? 'arrived' : '') + '" data-no="' + p.no + '"><div class="no">' + p.no + '</div><div><div class="name">' + p.name + '</div><div class="detail">' + p.kana + '</div></div>' + timeHtml + '<div class="actions"><div class="line"><button class="mini ' + (isArr ? 'active' : '') + ' arrive" onclick="setArr(' + p.no + ', true)">✓ 来場</button><button class="mini ' + (isAbs ? 'active' : '') + ' absent" onclick="setArr(' + p.no + ', false)">✗ 欠席</button></div><div class="line"><button class="mini ' + (s.pay==='c'?'active':'') + ' cash" onclick="setPay(' + p.no + ', \'c\')">現金</button><button class="mini ' + (s.pay==='k'?'active':'') + ' card" onclick="setPay(' + p.no + ', \'k\')">カ</button><button class="mini ' + (s.pay==='e'?'active':'') + ' exempt" onclick="setPay(' + p.no + ', \'e\')">免除</button></div></div></div>';
   }).join('');
   document.getElementById('stat-arr').textContent = stats.arr;
   document.getElementById('stat-abs').textContent = stats.abs;
   document.getElementById('stat-tot').textContent = DATA.length;
+  document.getElementById('stat-cash').textContent = stats.cash;
 }
 
 function downloadCSV() {
@@ -171,6 +244,7 @@ function resetAll() {
   }
 }
 
+buildJumpbar();
 render();
 </script>
 
