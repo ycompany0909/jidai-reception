@@ -172,14 +172,15 @@ function buildJumpbar() {
   });
 
   const jumpbar = document.getElementById('jumpbar');
-  jumpbar.innerHTML = KANA_ORDER.map(k => {
+  jumpbar.innerHTML = '';
+  KANA_ORDER.forEach(k => {
     const btn = document.createElement('button');
     btn.className = 'jumpbtn';
     btn.textContent = k;
     btn.onclick = () => jumpToKana(k);
     if (!groups.has(k)) btn.disabled = true;
-    return btn.outerHTML;
-  }).join('');
+    jumpbar.appendChild(btn);
+  });
 }
 
 function jumpToKana(group) {
