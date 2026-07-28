@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鈴木さん誕生日会 受付</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: rgba(15, 23, 42, 0.88);
+    --line: #334155;
+    --ink: #e5e7eb;
+    --muted: #94a3b8;
+    --accent: #8B1A1A;
+    --accent2: #5a0f0f;
+    --good: #16a34a;
+    --good2: #15803d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(180deg, #020617, #0f172a 26%, #111827);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  .hero {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    padding: 18px 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,.12);
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 12px 24px; }
+  .eyebrow { font-size: 12px; letter-spacing: .16em; color: #fde68a; opacity: .9; }
+  h1 { margin: 6px 0 6px; font-size: clamp(28px, 5vw, 44px); line-height: 1.05; }
+  .meta { display: flex; flex-wrap: wrap; gap: 10px 12px; margin-top: 12px; }
+  .pill {
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 13px;
+    color: #fef3c7;
+  }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px 13px; }
+  .k { font-size: 12px; color: var(--muted); }
+  .v { font-size: 26px; font-weight: 900; margin-top: 4px; line-height: 1; }
+  .jumpbar { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 12px; padding: 10px; border: 1px solid rgba(148, 163, 184, .18); border-radius: 14px; background: rgba(15, 23, 42, .62); }
+  .jumpbtn { border: 1px solid rgba(148, 163, 184, .28); background: #0b1220; color: #cbd5e1; border-radius: 999px; padding: 8px 11px; font-size: 13px; font-weight: 800; cursor: pointer; transition: all 0.15s ease; }
+  .jumpbtn:active { transform: scale(0.95); }
+  .jumpbtn.active { color: #fde68a; border-color: rgba(245, 158, 11, .45); background: rgba(245, 158, 11, .14); }
+  .jumpbtn:disabled { opacity: .32; cursor: not-allowed; }
+  .toolbar { display: flex; gap: 10px; margin: 14px 0; align-items: center; }
+  .search { flex: 1; border: 1px solid var(--line); background: #0b1220; color: var(--ink); border-radius: 14px; padding: 12px 14px; font-size: 14px; outline: none; }
+  .search:focus { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14, 165, 233, .16); }
+  .btn { border: none; border-radius: 14px; padding: 14px 16px; font-size: 14px; font-weight: 800; cursor: pointer; color: #fff; background: linear-gradient(135deg, #2563eb, #1e40af); white-space: nowrap; }
+  .btn.danger { background: linear-gradient(135deg, #991b1b, #7f1d1d); }
+  .list { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .row { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 14px; display: grid; grid-template-columns: 52px 1.2fr auto auto; gap: 14px; align-items: center; }
+  .row.arrived { opacity: .42; filter: grayscale(.2); }
+  .no { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: linear-gradient(135deg, rgba(139,26,26,.3), rgba(139,26,26,.12)); border: 1px solid rgba(139,26,26,.35); font-weight: 900; font-size: 18px; color: #fecaca; }
+  .name { font-size: 19px; font-weight: 900; line-height: 1.25; }
+  .detail { margin-top: 5px; color: var(--muted); font-size: 12px; }
+  .timestamp { background: linear-gradient(135deg, #0ea5e9, #0284c7); padding: 8px 14px; border-radius: 12px; text-align: center; font-size: 14px; font-weight: 900; color: #fff; font-family: 'Courier New', monospace; }
+  .actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  .line { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .mini { border: none; border-radius: 12px; padding: 10px 12px; font-size: 13px; font-weight: 800; cursor: pointer; color: #fff; background: #334155; }
+  .mini.arrive { background: linear-gradient(135deg, var(--good), var(--good2)); }
+  .mini.absent { background: linear-gradient(135deg, #dc2626, #991b1b); }
+  .mini.cash { background: linear-gradient(135deg, #166534, #14532d); }
+  .mini.card { background: linear-gradient(135deg, #1d4ed8, #1e40af); }
+  .mini.exempt { background: linear-gradient(135deg, #0f766e, #115e59); }
+  .mini.undo { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
+  .mini.active { box-shadow: 0 0 0 3px rgba(254, 240, 138, .2); outline: 2px solid rgba(253,224,71,.7); }
+  @media (max-width: 768px) {
+    .row { grid-template-columns: 40px 1fr auto; gap: 12px; }
+    .no { width: 40px; height: 40px; font-size: 14px; }
+    .timestamp { padding: 6px 10px; font-size: 12px; }
+    .actions { display: flex; flex-direction: row; gap: 6px; margin-top: 12px; }
+    .line { gap: 4px; }
+    .mini { padding: 8px 10px; font-size: 12px; }
+    .jumpbar { gap: 4px; padding: 8px; }
+    .jumpbtn { padding: 6px 9px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap" style="padding: 0 12px;">
+    <div class="eyebrow">IKIZAMA</div>
+    <h1>鈴木さん誕生日会 受付</h1>
+    <div class="meta"><span class="pill">🎂 受付管理</span></div>
+    <div class="stats">
+      <div class="card"><div class="k">来場</div><div class="v" id="stat-arr">0</div></div>
+      <div class="card"><div class="k">欠席</div><div class="v" id="stat-abs">0</div></div>
+      <div class="card"><div class="k">計</div><div class="v" id="stat-tot">-</div></div>
+      <div class="card"><div class="k">当日現金</div><div class="v">¥<span id="stat-cash">0</span></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="jumpbar" id="jumpbar"></div>
+  <div class="toolbar">
+    <input class="search" id="q" type="text" placeholder="名前・かなで検索...">
+    <button class="btn" onclick="downloadCSV()">📊 CSV出力</button>
+    <button class="btn" onclick="toggleAddPanel()">➕ ドタ参追加</button>
+    <button class="btn danger" onclick="resetAll()">🔄 リセット</button>
+  </div>
+  <div id="add-panel" hidden style="background:rgba(139,26,26,.08);border:1px solid rgba(139,26,26,.25);border-radius:16px;padding:16px;margin:14px 0;">
+    <div style="font-size:13px;color:#fde68a;font-weight:900;margin-bottom:12px;">ドタ参追加</div>
+    <div style="display:grid;gap:10px;margin-bottom:12px;">
+      <input id="add-name" type="text" placeholder="氏名" style="border:1px solid #334155;background:#0b1220;color:#e5e7eb;border-radius:8px;padding:8px 10px;font-size:13px;outline:none;">
+      <input id="add-kana" type="text" placeholder="かな（例: たろうはなこ）" style="border:1px solid #334155;background:#0b1220;color:#e5e7eb;border-radius:8px;padding:8px 10px;font-size:13px;outline:none;">
+      <select id="add-payment" style="border:1px solid #334155;background:#0b1220;color:#e5e7eb;border-radius:8px;padding:8px 10px;font-size:13px;outline:none;">
+        <option value="">支払方法を選択</option>
+        <option value="c">現金</option>
+        <option value="k">カード</option>
+        <option value="e">免除</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn" style="background:linear-gradient(135deg, #16a34a, #15803d);flex:1;" onclick="addParticipant()">追加して来場打刻</button>
+      <button class="btn" onclick="toggleAddPanel()" style="flex:0;">閉じる</button>
+    </div>
+  </div>
+  <div class="list" id="list"></div>
+</div>
+
+<script>
+const DATA = [
+  {"no": 1, "name": "山田太郎", "kana": "やまだたろう"},
+  {"no": 2, "name": "田中花子", "kana": "たなかはなこ"},
+  {"no": 3, "name": "佐藤一郎", "kana": "さとういちろう"},
+  {"no": 4, "name": "鈴木美咲", "kana": "すずきみさき"},
+  {"no": 5, "name": "伊藤健太", "kana": "いとうけんた"},
+  {"no": 6, "name": "渡辺由美", "kana": "わたなべゆみ"},
+  {"no": 7, "name": "高橋翔太", "kana": "たかはしょうた"},
+  {"no": 8, "name": "小林彩", "kana": "こばやしあや"},
+  {"no": 9, "name": "加藤大樹", "kana": "かとうたいき"},
+  {"no": 10, "name": "青木結衣", "kana": "あおきゆい"}
+];
+
+const KEY = 'suzuki-birthday-v1';
+let state = JSON.parse(localStorage.getItem(KEY) || '{}');
+DATA.forEach(p => {
+  if (!state[p.no]) state[p.no] = {arr:null, pay:null, ts:null, noshow:false};
+});
+
+const KANA_ORDER = ['あ','か','さ','た','な','は','ま','や','ら','わ'];
+const KANA_RANGES = {
+  'あ': ['あ','い','う','え','お'],
+  'か': ['か','き','く','け','こ','が','ぎ','ぐ','げ','ご'],
+  'さ': ['さ','し','す','せ','そ','ざ','じ','ず','ぜ','ぞ'],
+  'た': ['た','ち','つ','て','と','だ','ぢ','づ','で','ど'],
+  'な': ['な','に','ぬ','ね','の'],
+  'は': ['は','ひ','ふ','へ','ほ','ば','び','ぶ','べ','ぼ','ぱ','ぴ','ぷ','ぺ','ぽ'],
+  'ま': ['ま','み','む','め','も'],
+  'や': ['や','ゆ','よ'],
+  'ら': ['ら','り','る','れ','ろ'],
+  'わ': ['わ','を','ん']
+};
+
+function getFirstKana(name) {
+  if (!name || name.length === 0) return null;
+  return name.charAt(0);
+}
+
+function getKanaGroup(kana) {
+  for (let group of KANA_ORDER) {
+    if (KANA_RANGES[group].includes(kana)) return group;
+  }
+  return null;
+}
+
+function buildJumpbar() {
+  const groups = new Set();
+  DATA.forEach(p => {
+    const kana = getFirstKana(p.kana);
+    const group = getKanaGroup(kana);
+    if (group) groups.add(group);
+  });
+
+  const jumpbar = document.getElementById('jumpbar');
+  jumpbar.innerHTML = '';
+  KANA_ORDER.forEach(k => {
+    const btn = document.createElement('button');
+    btn.className = 'jumpbtn';
+    btn.textContent = k;
+    btn.onclick = () => jumpToKana(k);
+    if (!groups.has(k)) btn.disabled = true;
+    jumpbar.appendChild(btn);
+  });
+}
+
+function jumpToKana(group) {
+  const range = KANA_RANGES[group];
+  const target = DATA.find(p => {
+    const kana = getFirstKana(p.kana);
+    return range.includes(kana);
+  });
+  if (target) {
+    const elem = document.querySelector(`[data-no="${target.no}"]`);
+    if (elem) {
+      elem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+}
+
+function setState(no) {
+  if (!state[no]) state[no] = {arr:null, pay:null, ts:null, noshow:false};
+  return state[no];
+}
+
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(state));
+  render();
+}
+
+function pad(n) { return n<10?'0'+n:n; }
+function getJSTTime() {
+  const now = new Date(Date.now() + 9*3600*1000);
+  const h = pad(now.getUTCHours());
+  const m = pad(now.getUTCMinutes());
+  const s = pad(now.getUTCSeconds());
+  return h + ':' + m + ':' + s;
+}
+
+function setArr(no, val) {
+  const s = setState(no);
+  s.arr = val;
+  if (val === true) s.ts = getJSTTime();
+  if (val === true) s.noshow = false;
+  save();
+}
+
+function clearArr(no) {
+  const s = setState(no);
+  s.arr = null;
+  s.ts = null;
+  save();
+}
+
+function setNoShow(no) {
+  const s = setState(no);
+  s.noshow = true;
+  s.arr = false;
+  save();
+}
+
+function setPay(no, val) {
+  setState(no).pay = val;
+  save();
+}
+
+const PARTICIPANT_FEE = 0;
+
+function filteredRows() {
+  const q = (document.getElementById('q').value || '').toLowerCase().trim();
+  if (!q) return DATA;
+  return DATA.filter(p => {
+    const text = (p.name + ' ' + p.kana).toLowerCase();
+    return text.includes(q);
+  });
+}
+
+function isProcessed(p) {
+  const s = state[p.no] || {};
+  return s.arr !== null || s.noshow;
+}
+
+function renderRow(p) {
+  const s = state[p.no] || {};
+  const isArr = s.arr === true;
+  const isNoShow = s.noshow;
+  const rowClass = isProcessed(p) ? 'arrived' : '';
+  const timeHtml = (isArr && s.ts) ? ('<div class="timestamp">' + s.ts + '</div>') : '';
+  const undoBtn = isArr ? ('<button class="mini undo" onclick="clearArr(' + p.no + ')">↩</button>') : '';
+  return '<div class="row ' + rowClass + '" data-no="' + p.no + '"><div class="no">' + p.no + '</div><div><div class="name">' + p.name + '</div><div class="detail">' + p.kana + '</div></div>' + timeHtml + '<div class="actions"><div class="line"><button class="mini ' + (isArr ? 'active' : '') + ' arrive" onclick="setArr(' + p.no + ', true)">✓</button><button class="mini ' + (isNoShow ? 'active' : '') + ' absent" onclick="setNoShow(' + p.no + ')">✗</button>' + undoBtn + '</div><div class="line"><button class="mini ' + (s.pay==='c'?'active':'') + ' cash" onclick="setPay(' + p.no + ', \'c\')">¥</button><button class="mini ' + (s.pay==='k'?'active':'') + ' card" onclick="setPay(' + p.no + ', \'k\')">カ</button><button class="mini ' + (s.pay==='e'?'active':'') + ' exempt" onclick="setPay(' + p.no + ', \'e\')">免</button></div></div></div>';
+}
+
+function render() {
+  const list = document.getElementById('list');
+  const stats = {arr:0, abs:0, cash:0};
+  const filtered = filteredRows();
+  const pending = filtered.filter(p => !isProcessed(p));
+  const processed = filtered.filter(p => isProcessed(p));
+
+  DATA.forEach(p => {
+    const s = state[p.no] || {};
+    if (s.arr === true) stats.arr++;
+    if (s.noshow || (s.arr === false && !s.noshow)) stats.abs++;
+    if (s.pay === 'c') stats.cash++;
+  });
+
+  let html = '';
+  if (pending.length > 0) {
+    html += pending.map(renderRow).join('');
+  } else if (filtered.length > 0) {
+    html += '<div style="padding:20px;text-align:center;color:#94a3b8">未処理なし</div>';
+  }
+
+  if (processed.length > 0) {
+    html += '<div style="margin-top:20px;padding:12px 0;font-size:13px;color:#fde68a;border-bottom:1px solid rgba(148,163,184,.18)">処理済み (' + processed.length + '名)</div>';
+    html += processed.map(renderRow).join('');
+  }
+
+  list.innerHTML = html || '<div style="padding:20px;text-align:center;color:#94a3b8">該当者がいません</div>';
+  const cashAmount = stats.cash * PARTICIPANT_FEE;
+  document.getElementById('stat-arr').textContent = stats.arr;
+  document.getElementById('stat-abs').textContent = stats.abs;
+  document.getElementById('stat-tot').textContent = DATA.length;
+  document.getElementById('stat-cash').textContent = cashAmount.toLocaleString();
+}
+
+function downloadCSV() {
+  let csv = '番号,氏名,来場,時刻,支払\n';
+  DATA.forEach(p => {
+    const s = state[p.no] || {};
+    const arr = s.arr===true?'◯':(s.arr===false?'✗':'');
+    const ts = s.ts || '';
+    const pay = {c:'現金',k:'カード',e:'免除'}[s.pay]||'';
+    csv += p.no + ',"' + p.name + '","' + arr + '","' + ts + '","' + pay + '"\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = '鈴木さん誕生日会.csv';
+  link.click();
+}
+
+function resetAll() {
+  if (confirm('リセットしますか？')) {
+    localStorage.removeItem(KEY);
+    location.reload();
+  }
+}
+
+function toggleAddPanel() {
+  const panel = document.getElementById('add-panel');
+  const btn = event.target;
+  if (panel.hidden) {
+    panel.hidden = false;
+    btn.textContent = '➕ 閉じる';
+    document.getElementById('add-name').focus();
+  } else {
+    panel.hidden = true;
+    btn.textContent = '➕ ドタ参追加';
+  }
+}
+
+function addParticipant() {
+  const name = document.getElementById('add-name').value.trim();
+  const kana = document.getElementById('add-kana').value.trim();
+  const payment = document.getElementById('add-payment').value;
+  if (!name) {
+    alert('氏名を入力してください');
+    return;
+  }
+  if (!payment) {
+    alert('支払方法を選択してください');
+    return;
+  }
+  const nextNo = Math.max(...DATA.map(p => p.no), 0) + 1;
+  DATA.push({no: nextNo, name, kana});
+  const s = setState(nextNo);
+  s.pay = payment;
+  setArr(nextNo, true);
+  document.getElementById('add-name').value = '';
+  document.getElementById('add-kana').value = '';
+  document.getElementById('add-payment').value = '';
+  toggleAddPanel();
+}
+
+buildJumpbar();
+render();
+document.getElementById('q').addEventListener('input', render);
+</script>
+
+</body>
+</html>
