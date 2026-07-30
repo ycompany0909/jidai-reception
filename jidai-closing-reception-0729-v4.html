@@ -207,8 +207,27 @@ function setState(no) {
   return state[no];
 }
 
-function save() {
+async function save() {
   localStorage.setItem(KEY, JSON.stringify(state));
+
+  // サーバー（D1）に保存
+  for (const no in state) {
+    const s = state[no];
+    const body = {
+      no: parseInt(no),
+      checkin_at: s.ts || null,
+      payment_state: s.pay === 'c' ? 'cash' : s.pay === 'k' ? 'card' : s.pay === 'e' ? 'exempt' : null,
+      attendance_state: s.noshow ? 'no_show' : (s.arr === true ? 'arrived' : null)
+    };
+    try {
+      await fetch('/api/jidai/reception/jidai-closing-0729/state?data=' + encodeURIComponent(JSON.stringify(body)), {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (e) {
+      console.error('Save to server failed:', e);
+    }
+  }
   render();
 }
 
