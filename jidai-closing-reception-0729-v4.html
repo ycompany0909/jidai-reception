@@ -407,10 +407,34 @@ function updateLockButton() {
   }
 }
 
-buildJumpbar();
-render();
-updateLockButton();
-document.getElementById('q').addEventListener('input', render);
+async function initFromServer() {
+  try {
+    const res = await fetch('/api/jidai/reception/jidai-closing-0729/state');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.rows && data.rows.length > 0) {
+        data.rows.forEach(row => {
+          state[row.no] = {
+            arr: row.attendance_state === 'arrived' ? true : row.attendance_state === 'no_show' ? false : null,
+            pay: row.payment_state === 'cash' ? 'c' : row.payment_state === 'card' ? 'k' : row.payment_state === 'exempt' ? 'e' : null,
+            ts: row.checkin_at || null,
+            noshow: row.attendance_state === 'no_show'
+          };
+        });
+        localStorage.setItem(KEY, JSON.stringify(state));
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load from server:', e);
+  }
+}
+
+initFromServer().then(() => {
+  buildJumpbar();
+  render();
+  updateLockButton();
+  document.getElementById('q').addEventListener('input', render);
+});
 </script>
 
 </body>
